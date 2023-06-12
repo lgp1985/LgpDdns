@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Hosting.Systemd;
+using Microsoft.Extensions.Options;
 using System.Net.NetworkInformation;
 using System.Text.Json.Serialization;
 using System.Web;
@@ -9,11 +10,13 @@ public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> logger;
     private readonly IHttpClientFactory httpClientFactory;
+    private readonly DdnsSettings options;
 
-    public Worker(ILogger<Worker> logger, IHostLifetime lifetime, IHttpClientFactory httpClientFactory)
+    public Worker(ILogger<Worker> logger, IHostLifetime lifetime, IHttpClientFactory httpClientFactory, IOptions<DdnsSettings> options)
     {
         this.logger = logger;
         this.httpClientFactory = httpClientFactory;
+        this.options = options.Value;
         this.logger.LogInformation("IsSystemd: {isSystemd}", lifetime.GetType() == typeof(SystemdLifetime));
         this.logger.LogInformation("IHostLifetime: {hostLifetime}", lifetime.GetType());
     }
@@ -45,10 +48,10 @@ public class Worker : BackgroundService
             var uriBuilder = new UriBuilder("http://api.dynu.com/nic/update");
             var query = HttpUtility.ParseQueryString(uriBuilder.Query);
             query["myipv6"] = ipStandardNotation;
-            query["hostname"] = "aero";
+            query["hostname"] = options.Hostname;
             uriBuilder.Query = query.ToString();
             var httpRequestMessage = new HttpRequestMessage { RequestUri = uriBuilder.Uri };
-            httpRequestMessage.Headers.Authorization = new BasicAuthenticationHeaderValue("lgp1985", "vutpuh-jazjoc-2nIrda");
+            httpRequestMessage.Headers.Authorization = new BasicAuthenticationHeaderValue(options.UserName, options.Password);
             using var httpClient = httpClientFactory.CreateClient();
             var httpResponseMessage = await httpClient.SendAsync(httpRequestMessage);
             var content = await httpResponseMessage.Content.ReadAsStringAsync();
