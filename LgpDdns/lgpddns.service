@@ -1,0 +1,9 @@
+[Unit]
+Description=Simple service to update DDNS entry on dynu.com
+
+[Service]
+Type=notify
+ExecStart=/usr/sbin/lgpddns
+
+[Install]
+WantedBy=multi-user.target

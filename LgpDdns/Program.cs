@@ -1,9 +1,11 @@
 using LgpDdns;
 
-IHost host = Host.CreateDefaultBuilder(args)
+var host = Host.CreateDefaultBuilder(args)
+    .UseSystemd()
     .ConfigureServices(services =>
     {
-        services.AddHostedService<Worker>();
+        _ = services.AddHostedService<Worker>()
+        .AddHttpClient();
     })
     .Build();
 
