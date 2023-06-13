@@ -39,10 +39,13 @@ public class Worker : BackgroundService
         try
         {
             var ip = NetworkInterface.GetAllNetworkInterfaces()
-                .Where(s => s.OperationalStatus == OperationalStatus.Up)
+                .Where(s => s.OperationalStatus is OperationalStatus.Up && s.NetworkInterfaceType is not NetworkInterfaceType.Loopback)
                 .Select(s => s.GetIPProperties())
                 .SelectMany(s => s.UnicastAddresses)
-                .First(s => s.PrefixOrigin == PrefixOrigin.RouterAdvertisement && s.SuffixOrigin == SuffixOrigin.LinkLayerAddress);
+                .First(s =>
+                (OperatingSystem.IsWindows() && s.PrefixOrigin is PrefixOrigin.RouterAdvertisement && s.SuffixOrigin is SuffixOrigin.LinkLayerAddress)
+                ||
+                (OperatingSystem.IsLinux() && s.Address.IsIPv6LinkLocal is false && s.Address.AddressFamily is System.Net.Sockets.AddressFamily.InterNetworkV6));
             var ipStandardNotation = ip.Address.ToString();
 
             var uriBuilder = new UriBuilder("http://api.dynu.com/nic/update");
