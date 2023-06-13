@@ -2,6 +2,10 @@ using LgpDdns;
 
 var host = Host.CreateDefaultBuilder(args)
     .UseSystemd()
+    .UseWindowsService(options =>
+    {
+        options.ServiceName = "LgpDdns";
+    })
     .ConfigureServices((builderContext, services) =>
     {
         _ = services
